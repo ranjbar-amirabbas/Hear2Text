@@ -47,6 +47,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_valid_mp3_file(self, mock_service):
         """Test uploading a valid MP3 file returns job ID."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.return_value = "test-job-id-456"
         
         audio_data = b"\xff\xfb" + b"\x00" * 100  # MP3 header
@@ -63,6 +64,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_valid_ogg_file(self, mock_service):
         """Test uploading a valid OGG file returns job ID."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.return_value = "test-job-id-789"
         
         audio_data = b"OggS" + b"\x00" * 100  # OGG header
@@ -78,6 +80,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_valid_m4a_file(self, mock_service):
         """Test uploading a valid M4A file returns job ID."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.return_value = "test-job-id-m4a"
         
         audio_data = b"\x00\x00\x00\x20ftyp" + b"\x00" * 100  # M4A header
@@ -93,6 +96,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_unsupported_format_returns_415(self, mock_service):
         """Test uploading unsupported format returns 415 error."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         
         audio_data = b"fake audio data"
         files = {"audio_file": ("test.txt", io.BytesIO(audio_data), "text/plain")}
@@ -110,6 +114,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_without_file_returns_422(self, mock_service):
         """Test uploading without file returns validation error."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         
         response = client.post("/api/v1/transcribe/batch")
         
@@ -123,6 +128,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_exceeds_size_limit_returns_413(self, mock_service):
         """Test uploading file exceeding size limit returns 413 error."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         
         # Create a file larger than MAX_FILE_SIZE_BYTES (500 MB)
         # We'll simulate this by creating a generator that yields chunks
@@ -150,6 +156,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_when_service_not_ready_initializes_model(self, mock_service):
         """Test that model is initialized on first request if not ready."""
         mock_service.is_ready.return_value = False
+        mock_service.is_at_capacity.return_value = False
         mock_service.initialize = Mock()
         
         # After initialize is called, is_ready should return True
@@ -188,6 +195,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_with_format_validation_error_returns_415(self, mock_service):
         """Test that format validation error returns 415."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.side_effect = UnsupportedFormatError(
             "Audio format not supported"
         )
@@ -207,6 +215,7 @@ class TestBatchTranscriptionUpload:
     def test_upload_with_file_not_found_error_returns_400(self, mock_service):
         """Test that FileNotFoundError returns 400."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.side_effect = FileNotFoundError(
             "Audio file not found"
         )
@@ -352,6 +361,7 @@ class TestBatchEndpointIntegration:
         """Test complete workflow: upload -> check status -> get result."""
         # Setup mocks
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.return_value = "workflow-job-123"
         
         # Step 1: Upload file
@@ -395,6 +405,7 @@ class TestBatchEndpointIntegration:
         """Test that all error responses follow consistent format."""
         # Test 415 error format
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         audio_data = b"fake"
         files = {"audio_file": ("test.txt", io.BytesIO(audio_data), "text/plain")}
         
@@ -426,6 +437,7 @@ class TestRequestValidation:
     def test_empty_file_upload(self, mock_service):
         """Test uploading an empty file."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.return_value = "empty-job"
         
         audio_data = b""  # Empty file
@@ -440,6 +452,7 @@ class TestRequestValidation:
     def test_filename_with_special_characters(self, mock_service):
         """Test uploading file with special characters in filename."""
         mock_service.is_ready.return_value = True
+        mock_service.is_at_capacity.return_value = False
         mock_service.transcribe_batch.return_value = "special-job"
         
         audio_data = b"RIFF" + b"\x00" * 100

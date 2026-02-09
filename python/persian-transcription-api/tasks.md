@@ -255,7 +255,7 @@ This implementation plan breaks down the Persian Transcription API into discrete
     - Document request/response schemas
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [-] 16. Final checkpoint - Complete system verification
+- [ ] 16. Final checkpoint - Complete system verification
   - Ensure all tests pass, ask the user if questions arise.
   - Verify Docker build succeeds
   - Verify service starts and responds to health checks

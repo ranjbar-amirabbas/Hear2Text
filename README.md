@@ -230,6 +230,8 @@ Transcription__MaxConcurrentWorkers=4
 | medium | 5 GB | Moderate | Very Good | **Production** ⭐ |
 | large | 10 GB | Slow | Excellent | High accuracy |
 
+**Note:** Whisper model files (*.bin) are not included in this repository due to their large size (360MB+). The Docker build process automatically downloads the required model during the first build. For local development, models will be downloaded automatically on first use and cached in `~/.cache/whisper/`.
+
 ## Docker Compose Services
 
 The root `docker-compose.yml` orchestrates both services:

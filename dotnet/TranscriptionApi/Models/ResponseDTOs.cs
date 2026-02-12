@@ -44,6 +44,17 @@ public record BatchTranscriptionResponse(
 );
 
 /// <summary>
+/// Response for synchronous transcription requests.
+/// Returns the transcription result immediately.
+/// </summary>
+/// <param name="Transcription">The transcribed text.</param>
+/// <param name="Status">Status of the transcription (typically "completed").</param>
+public record SyncTranscriptionResponse(
+    string Transcription,
+    string Status
+);
+
+/// <summary>
 /// Response for job status queries.
 /// Provides current status and results of a transcription job.
 /// </summary>

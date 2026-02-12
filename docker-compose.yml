@@ -10,12 +10,12 @@ services:
       context: ./python
       dockerfile: Dockerfile
       args:
-        WHISPER_MODEL_SIZE: medium
+        WHISPER_MODEL_SIZE: large
     container_name: python-transcription-api
     ports:
       - "8000:8000"
     environment:
-      - WHISPER_MODEL_SIZE=medium
+      - WHISPER_MODEL_SIZE=large
       - MAX_CONCURRENT_WORKERS=4
       - MAX_QUEUE_SIZE=100
       - MAX_FILE_SIZE_MB=500
@@ -43,13 +43,13 @@ services:
       context: ./dotnet/TranscriptionApi
       dockerfile: Dockerfile
       args:
-        WHISPER_MODEL_SIZE: medium
+        WHISPER_MODEL_SIZE: large
     container_name: dotnet-transcription-api
     ports:
       - "5226:5226"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - Transcription__WhisperModelSize=medium
+      - Transcription__WhisperModelSize=large
       - Transcription__MaxConcurrentWorkers=4
       - Transcription__MaxQueueSize=100
       - Transcription__MaxFileSizeMB=500

@@ -51,8 +51,14 @@ ARG WHISPER_MODEL_SIZE=medium
 ENV WHISPER_MODEL_SIZE=${WHISPER_MODEL_SIZE}
 
 # Download the GGML model from Hugging Face
-RUN wget -O /root/.cache/whisper/ggml-${WHISPER_MODEL_SIZE}.bin \
-    https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-${WHISPER_MODEL_SIZE}.bin
+# Note: The code expects ggml-{size}.bin, so we download and rename accordingly
+RUN if [ "$WHISPER_MODEL_SIZE" = "large" ]; then \
+        wget -O /root/.cache/whisper/ggml-large.bin \
+        https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin; \
+    else \
+        wget -O /root/.cache/whisper/ggml-${WHISPER_MODEL_SIZE}.bin \
+        https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-${WHISPER_MODEL_SIZE}.bin; \
+    fi
 
 # =============================================================================
 # Final Stage: Production Image

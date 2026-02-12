@@ -98,6 +98,80 @@ public class TranscriptionController : ControllerBase
             Status: "pending"
         ));
     }
+    /// <summary>
+    /// Transcribe an audio file synchronously and return the result immediately.
+    /// This endpoint waits for the transcription to complete before returning.
+    /// </summary>
+    /// <param name="audioFile">The audio file to transcribe (WAV, MP3, OGG, M4A)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Transcription result</returns>
+    /// <response code="200">Transcription completed successfully</response>
+    /// <response code="413">File exceeds maximum size limit</response>
+    /// <response code="415">Unsupported audio format</response>
+    [HttpPost("sync")]
+    [ProducesResponseType(typeof(SyncTranscriptionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status413PayloadTooLarge)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<ActionResult<SyncTranscriptionResponse>> TranscribeSync(
+        IFormFile audioFile,
+        CancellationToken ct)
+    {
+        _logger.LogInformation("Received synchronous transcription request for file: {FileName}", audioFile?.FileName);
+
+        // Validate that a file was provided
+        if (audioFile == null || audioFile.Length == 0)
+        {
+            _logger.LogWarning("No audio file provided in request");
+            throw new InvalidAudioFormatException("No audio file provided");
+        }
+
+        // Validate audio file format and size
+        _audioProcessor.IsValidAudioFile(audioFile);
+        _logger.LogDebug("Audio file validation passed for: {FileName}", audioFile.FileName);
+
+        // Save the uploaded file to temporary storage
+        string audioFilePath;
+        try
+        {
+            audioFilePath = await _audioProcessor.SaveUploadedFileAsync(audioFile, ct);
+            _logger.LogDebug("Audio file saved to: {FilePath}", audioFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save uploaded audio file: {FileName}", audioFile.FileName);
+            throw new InvalidOperationException("Failed to save uploaded file", ex);
+        }
+
+        try
+        {
+            // Transcribe the audio file synchronously
+            _logger.LogInformation("Starting synchronous transcription for file: {FileName}", audioFile.FileName);
+            var transcription = await _transcriptionService.TranscribeAsync(audioFilePath, ct);
+            _logger.LogInformation("Synchronous transcription completed for file: {FileName}", audioFile.FileName);
+
+            return Ok(new SyncTranscriptionResponse(
+                Transcription: transcription,
+                Status: "completed"
+            ));
+        }
+        finally
+        {
+            // Clean up the uploaded file
+            try
+            {
+                if (System.IO.File.Exists(audioFilePath))
+                {
+                    System.IO.File.Delete(audioFilePath);
+                    _logger.LogDebug("Deleted uploaded audio file: {FilePath}", audioFilePath);
+                }
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.LogWarning(cleanupEx, "Failed to clean up uploaded file: {FilePath}", audioFilePath);
+            }
+        }
+    }
+
 
     /// <summary>
     /// Get the status and results of a transcription job.
